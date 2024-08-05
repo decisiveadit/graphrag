@@ -5,7 +5,7 @@
 
 import logging
 import time
-from typing import Any
+from typing import Any, AsyncIterator, Iterator
 
 import tiktoken
 
@@ -58,8 +58,7 @@ class LocalSearch(BaseSearch):
         query: str,
         conversation_history: ConversationHistory | None = None,
         **kwargs,
-    ) -> SearchResult:
-        """Build local search context that fits a single context window and generate answer for the user query."""
+    ) -> AsyncIterator[SearchResult]:
         start_time = time.time()
         search_prompt = ""
 
@@ -79,25 +78,24 @@ class LocalSearch(BaseSearch):
                 {"role": "user", "content": query},
             ]
 
-            response = await self.llm.agenerate(
+            async for chunk in self.llm.agenerate(
                 messages=search_messages,
                 streaming=True,
                 callbacks=self.callbacks,
                 **self.llm_params,
-            )
-
-            return SearchResult(
-                response=response,
-                context_data=context_records,
-                context_text=context_text,
-                completion_time=time.time() - start_time,
-                llm_calls=1,
-                prompt_tokens=num_tokens(search_prompt, self.token_encoder),
-            )
+            ):
+                yield SearchResult(
+                    response=chunk,
+                    context_data=context_records,
+                    context_text=context_text,
+                    completion_time=time.time() - start_time,
+                    llm_calls=1,
+                    prompt_tokens=num_tokens(search_prompt, self.token_encoder),
+                )
 
         except Exception:
             log.exception("Exception in _asearch")
-            return SearchResult(
+            yield SearchResult(
                 response="",
                 context_data=context_records,
                 context_text=context_text,
@@ -111,8 +109,7 @@ class LocalSearch(BaseSearch):
         query: str,
         conversation_history: ConversationHistory | None = None,
         **kwargs,
-    ) -> SearchResult:
-        """Build local search context that fits a single context window and generate answer for the user question."""
+    ) -> Iterator[SearchResult]:
         start_time = time.time()
         search_prompt = ""
         context_text, context_records = self.context_builder.build_context(
@@ -131,25 +128,24 @@ class LocalSearch(BaseSearch):
                 {"role": "user", "content": query},
             ]
 
-            response = self.llm.generate(
+            for chunk in self.llm.generate(
                 messages=search_messages,
                 streaming=True,
                 callbacks=self.callbacks,
                 **self.llm_params,
-            )
-
-            return SearchResult(
-                response=response,
-                context_data=context_records,
-                context_text=context_text,
-                completion_time=time.time() - start_time,
-                llm_calls=1,
-                prompt_tokens=num_tokens(search_prompt, self.token_encoder),
-            )
+            ):
+                yield SearchResult(
+                    response=chunk,
+                    context_data=context_records,
+                    context_text=context_text,
+                    completion_time=time.time() - start_time,
+                    llm_calls=1,
+                    prompt_tokens=num_tokens(search_prompt, self.token_encoder),
+                )
 
         except Exception:
             log.exception("Exception in _map_response_single_batch")
-            return SearchResult(
+            yield SearchResult(
                 response="",
                 context_data=context_records,
                 context_text=context_text,
