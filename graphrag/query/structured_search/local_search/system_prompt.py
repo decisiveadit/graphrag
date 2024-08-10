@@ -17,7 +17,6 @@ Do not include information where the supporting evidence for it is not provided.
 
 ---Data tables---
 {context_data}
-Add sections and commentary to the response as appropriate for the length and format. Style the response in markdown.
 
 When presenting information that would benefit from a structured format, please use markdown tables where appropriate. This applies particularly to comparisons, lists with multiple attributes, or any data that would be clearer in a tabular layout. For all other responses, use standard text formatting.
 
@@ -51,5 +50,5 @@ Here are examples of how to format a table in markdown:
 
 Please use this format when presenting tabular data in your responses.
 
-
+You are generating content for a formal document so do not provide any commentary or extra information.
 """
