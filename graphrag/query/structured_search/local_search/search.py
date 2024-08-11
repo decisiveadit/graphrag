@@ -127,6 +127,8 @@ class LocalSearch(BaseSearch):
                 {"role": "system", "content": search_prompt},
                 {"role": "user", "content": query},
             ]
+            print('----------------')
+            print(f'Data going to rag is below {search_messages}')
 
             for chunk in self.llm.generate(
                 messages=search_messages,
