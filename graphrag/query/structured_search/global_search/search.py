@@ -9,7 +9,7 @@ import logging
 import time
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import Any, AsyncIterator, Iterator
+from typing import Any
 
 import pandas as pd
 import tiktoken
@@ -137,7 +137,7 @@ class GlobalSearch(BaseSearch):
         query: str,
         conversation_history: ConversationHistory | None = None,
         **kwargs: Any,
-    ) -> AsyncIterator[GlobalSearchResult]:
+    ) -> GlobalSearchResult:
         """
         Perform a global search.
 
@@ -168,13 +168,13 @@ class GlobalSearch(BaseSearch):
         map_prompt_tokens = sum(response.prompt_tokens for response in map_responses)
 
         # Step 2: Combine the intermediate answers from step 2 to generate the final answer
-        reduce_response = self._reduce_response(
+        reduce_response = await self._reduce_response(
             map_responses=map_responses,
             query=query,
             **self.reduce_llm_params,
         )
 
-        yield GlobalSearchResult(
+        return GlobalSearchResult(
             response=reduce_response.response,
             context_data=context_records,
             context_text=context_chunks,
@@ -193,7 +193,7 @@ class GlobalSearch(BaseSearch):
         **kwargs: Any,
     ) -> GlobalSearchResult:
         """Perform a global search synchronously."""
-        yield asyncio.run(self.asearch(query, conversation_history))
+        return asyncio.run(self.asearch(query, conversation_history))
 
     async def _map_response_single_batch(
         self,
